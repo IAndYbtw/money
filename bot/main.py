@@ -1,8 +1,13 @@
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher  # pyright: ignore[reportMissingImports]
 from config import TOKEN
 import asyncio
-from aiogram.filters import Command
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from aiogram.filters import Command  # pyright: ignore[reportMissingImports]
+from aiogram.types import (  # pyright: ignore[reportMissingImports]
+    Message,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    WebAppInfo,
+)
 
 dp = Dispatcher()
 
