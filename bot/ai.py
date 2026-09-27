@@ -1,5 +1,5 @@
 import json
-from openai import OpenAI
+from openai import OpenAI  # type: ignore[import-not-found]
 
 from config import API_KEY, DEEPSEEK_MODEL
 

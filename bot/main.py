@@ -31,17 +31,17 @@ def open_app_keyboard():
 async def command_start_handler(message: Message):
     await message.answer(
         "👋 Привет!\n\n"
-        "Я помогу тебе найти, где поесть в ГУУ 🍽️\n"
-        "Ты можешь посмотреть кафе и меню заведений.\n\n"
-        "👇 Нажми кнопку ниже, чтобы начать",
+        "Привет! Я помогу понять, куда уходят деньги, и найду траты, которые ты не замечаешь.\n"
+        "Просто пиши мне траты в формате \"300 продукты\" или \"такси 450\" — я всё разберу сам.\n\n"
+        "👇 Нажми кнопку ниже, чтобы начать 👇",
         reply_markup=open_app_keyboard()
     )
 
 
-@dp.message(Command("menu"))
+@dp.message(Command("app"))
 async def command_menu_handler(message: Message):
     await message.answer(
-        "🍔 Открываю меню заведений!",
+        "Открываю приложение...",
         reply_markup=open_app_keyboard()
     )
 
@@ -50,9 +50,9 @@ async def command_menu_handler(message: Message):
 async def command_help_handler(message: Message):
     await message.answer(
         "ℹ️ Помощь:\n\n"
-        "/menu — открыть меню и кафе\n"
+        "/app — открыть приложение\n"
         "/help — помощь\n\n"
-        "Для поиска еды используй приложение 👇",
+        "Для открытия приложения нажми кнопку ниже или введи команду /app",
         reply_markup=open_app_keyboard()
     )
 
