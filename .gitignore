@@ -64,5 +64,6 @@ Thumbs.db
 
 # Temporary files
 *.tmp
-*.tempbot/.env
+*.temp
+bot/.env
 .env

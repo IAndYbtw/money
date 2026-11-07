@@ -1,0 +1,17 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+# База по умолчанию ляжет в /app/finbot.sqlite3.
+# Для volume удобнее: -e DB_PATH=/app/data/finbot.sqlite3 -v finbot-data:/app/data
+VOLUME ["/app/data"]
+
+CMD ["python", "main.py"]
