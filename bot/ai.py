@@ -1,4 +1,7 @@
-"""DeepSeek API: промпты и вызовы.
+"""ИИ-провайдер: промпты и вызовы.
+
+Работает с любым OpenAI-совместимым API (DeepSeek, Gemini, Groq, OpenRouter,
+локальный Ollama) — провайдер задаётся через AI_BASE_URL/AI_MODEL/AI_API_KEY.
 
 Клиент создаётся лениво: импорт модуля не должен падать без API_KEY
 (например, в тестах). Для запросов заданы таймаут и ретраи.
@@ -18,13 +21,14 @@ def _get_client() -> OpenAI:
     if _client is None:
         if not config.API_KEY:
             raise RuntimeError(
-                "API_KEY не задан — заполни bot/.env (см. bot/.env.example)."
+                "API_KEY не задан — добавь AI_API_KEY в bot/.env "
+                "(см. bot/.env.example)."
             )
         _client = OpenAI(
             api_key=config.API_KEY,
-            base_url=config.DEEPSEEK_BASE_URL,
-            timeout=config.DEEPSEEK_TIMEOUT,
-            max_retries=config.DEEPSEEK_RETRIES,
+            base_url=config.AI_BASE_URL,
+            timeout=config.AI_TIMEOUT,
+            max_retries=config.AI_RETRIES,
         )
     return _client
 
@@ -52,7 +56,7 @@ SYSTEM_PROMPT = """\
 
 def _chat(messages: list[dict], max_tokens: int) -> str:
     response = _get_client().chat.completions.create(
-        model=config.DEEPSEEK_MODEL,
+        model=config.AI_MODEL,
         max_tokens=max_tokens,
         messages=messages,
     )

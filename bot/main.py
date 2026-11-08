@@ -94,6 +94,25 @@ def _limit_text() -> str:
     )
 
 
+def _ai_error_text(exc: Exception) -> str:
+    """Понятное пользователю объяснение вместо общего «попробуй позже»."""
+    if not config.API_KEY:
+        return (
+            "ИИ не настроен: добавь AI_API_KEY в bot/.env и перезапусти бота."
+        )
+    text = str(exc)
+    if "402" in text or "Insufficient Balance" in text:
+        return (
+            "У ИИ-провайдера нулевой баланс. Пополни счёт или переключись "
+            "на бесплатный тариф (см. README, раздел «Бесплатные провайдеры»)."
+        )
+    if "401" in text or "Authentication" in text:
+        return "Ключ ИИ неверный или отозван. Обнови AI_API_KEY в bot/.env."
+    if "429" in text or "rate limit" in text.lower():
+        return "ИИ временно упёрся в лимит запросов. Попробуй через минуту."
+    return "Не получилось связаться с ИИ. Попробуй позже."
+
+
 def _local_dt(created_at: str, tz_name: str) -> str:
     dt = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
     return dt.astimezone(utils.get_zone(tz_name)).strftime("%d.%m.%Y %H:%M")
@@ -231,9 +250,9 @@ async def command_insights(message: Message):
     await message.answer("🔎 Анализирую твои траты…")
     try:
         text = await asyncio.to_thread(ai.generate_insights, summary)
-    except Exception:
-        log.exception("DeepSeek insights failed for user %s", tg_id)
-        await message.answer("Не получилось связаться с ИИ. Попробуй позже.")
+    except Exception as exc:
+        log.exception("AI insights failed for user %s", tg_id)
+        await message.answer(_ai_error_text(exc))
         return
     if not text.strip():
         await message.answer("ИИ вернул пустой ответ. Попробуй ещё раз позже.")
@@ -266,9 +285,9 @@ async def command_ask(message: Message):
         answer = await asyncio.to_thread(
             ai.answer_question, summary, question, history
         )
-    except Exception:
-        log.exception("DeepSeek ask failed for user %s", tg_id)
-        await message.answer("Не получилось связаться с ИИ. Попробуй позже.")
+    except Exception as exc:
+        log.exception("AI ask failed for user %s", tg_id)
+        await message.answer(_ai_error_text(exc))
         return
     if not answer.strip():
         await message.answer("ИИ вернул пустой ответ. Попробуй ещё раз позже.")

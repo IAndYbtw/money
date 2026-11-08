@@ -5,6 +5,7 @@
 не создавал базу в случайной текущей директории.
 """
 
+import logging
 import os
 from pathlib import Path
 
@@ -27,12 +28,24 @@ def _resolve_db_path(value: str) -> str:
 
 
 TOKEN = os.getenv("BOT_TOKEN")
-API_KEY = os.getenv("API_KEY")
 
-DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
-DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-DEEPSEEK_TIMEOUT = float(os.getenv("DEEPSEEK_TIMEOUT", "30"))
-DEEPSEEK_RETRIES = int(os.getenv("DEEPSEEK_RETRIES", "2"))
+# Провайдер ИИ. Новые имена AI_* — основные, DEEPSEEK_* оставлены для
+# совместимости со старыми .env. Подходит любой OpenAI-совместимый endpoint:
+# DeepSeek, Gemini, Groq, OpenRouter, Ollama.
+API_KEY = os.getenv("AI_API_KEY") or os.getenv("API_KEY")
+
+AI_MODEL = os.getenv("AI_MODEL") or os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+AI_BASE_URL = os.getenv("AI_BASE_URL") or os.getenv(
+    "DEEPSEEK_BASE_URL", "https://api.deepseek.com"
+)
+AI_TIMEOUT = float(os.getenv("AI_TIMEOUT") or os.getenv("DEEPSEEK_TIMEOUT", "30"))
+AI_RETRIES = int(os.getenv("AI_RETRIES") or os.getenv("DEEPSEEK_RETRIES", "2"))
+
+# Старые имена — алиасы, чтобы не ломать существующий код и .env.
+DEEPSEEK_MODEL = AI_MODEL
+DEEPSEEK_BASE_URL = AI_BASE_URL
+DEEPSEEK_TIMEOUT = AI_TIMEOUT
+DEEPSEEK_RETRIES = AI_RETRIES
 
 DB_PATH = _resolve_db_path(os.getenv("DB_PATH", "finbot.sqlite3"))
 
@@ -55,17 +68,19 @@ MAX_IMPORT_BYTES = 10 * 1024 * 1024
 
 
 def validate() -> None:
-    """Проверка обязательных настроек на старте. Падаем с понятным текстом."""
-    missing = [
-        name
-        for name, value in (("BOT_TOKEN", TOKEN), ("API_KEY", API_KEY))
-        if not value
-    ]
-    if missing:
+    """Проверка настроек на старте. Без BOT_TOKEN работать нельзя.
+
+    Без ключа ИИ бот всё равно запускается: учёт трат, бюджеты, цели и импорт
+    остаются доступными, а команды ИИ отвечают понятной ошибкой.
+    """
+    if not TOKEN:
         raise RuntimeError(
-            "Не заданы обязательные переменные окружения: "
-            + ", ".join(missing)
-            + ". Заполни bot/.env (см. bot/.env.example)."
+            "Не задан BOT_TOKEN. Заполни bot/.env (см. bot/.env.example)."
+        )
+    if not API_KEY:
+        logging.getLogger("finbot").warning(
+            "API_KEY не задан — /insights, /ask и еженедельная сводка будут "
+            "недоступны. Добавь AI_API_KEY в bot/.env."
         )
     if WEB_APP_URL and not WEB_APP_URL.startswith("https://"):
         raise RuntimeError("WEB_APP_URL должен начинаться с https://")
